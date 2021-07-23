@@ -1,6 +1,3 @@
-// This one's still a work in progress. Don't use it yet.
-// Big thanks to u/lexpartizan for fixing alot of bugs and optimizing it :)
-
 // Saw a few of these in Unreal Engine and Unity but no Godot :(
 // So I made one, check other comments for free textures and more info on the shader
 shader_type spatial;
@@ -15,23 +12,23 @@ uniform sampler2D surface_normalmap : hint_normal;
 
 uniform vec4 top_color : hint_color = vec4(0.6764, 0.980092, 1.0, 1.0);
 uniform float depth = 0.1;
-uniform float normal_depth = 2.0;
+uniform float normal_depth = 1.0;
 uniform float roughness : hint_range(0.0, 1.0) = 0.0;
 uniform float metallic : hint_range(0.0, 1.0) = 0.7;
-uniform int method : hint_range(0, 3) = 1;
-uniform float refractive_angle = 0.4;
 uniform float refractive_index = 0.1;
 
-
+// ========= ↓↓↓ From u/lexpartizan the GOAT ↓↓↓ ==============
 float blendOverlay_f(float base, float blend) {
 	float branchless = step (base,0.5);
 	return (2.0*base*blend)*branchless + (1.0-2.0*(1.0-base)*(1.0-blend))*(1.0-branchless); //This is branchless version
 }
+// ======== ↑↑↑ From u/lexpartizan the GOAT ↑↑↑ ==============
 
 vec3 blendOverlay(vec3 base, vec3 blend) {
 	return vec3(blendOverlay_f(base.r,blend.r),blendOverlay_f(base.g,blend.g),blendOverlay_f(base.b,blend.b));
 }
 
+// ============= ↓↓↓ More from u/lexpartizan the GOAT ========================
 varying vec3 ro;
 varying vec3 p;
 varying vec3 vertex_normal_ws;
@@ -41,10 +38,11 @@ void vertex()
 	p = ((WORLD_MATRIX)*vec4(VERTEX,1.0)).xyz;// Get fragment position in world space coordinates
 	vertex_normal_ws = ((WORLD_MATRIX)*vec4(NORMAL,1.0)).xyz;
 }
+// ============= ↑↑↑ More from u/lexpartizan the GOAT ↑↑↑ ====================
 
 void fragment(){
 	vec3 normal = texture(surface_normalmap, UV).xyz * 2.0 - 1.0;
-	NORMALMAP = (texture(surface_normalmap, UV).xyz * 2.0 - 1.0) * 0.5 + 0.5;
+	NORMALMAP = texture(surface_normalmap, UV).xyz;
 	NORMALMAP_DEPTH = normal_depth;
 	
 	vec3 refraction;
